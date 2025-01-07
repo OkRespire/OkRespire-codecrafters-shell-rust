@@ -1,11 +1,10 @@
-use std::alloc::System;
 #[allow(unused_imports)]
 use std::io::{self, Write};
 
 fn main() {
     loop {
         let input = user_input();
-        match input.as_str() {
+        match input.as_str().trim() {
             "exit 0" => exit(0),
             _ => println!("{}: command not found", input.trim()),
         }
