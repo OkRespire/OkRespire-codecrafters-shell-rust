@@ -1,3 +1,4 @@
+use std::alloc::System;
 #[allow(unused_imports)]
 use std::io::{self, Write};
 
@@ -5,7 +6,7 @@ fn main() {
     loop {
         let input = user_input();
         match input.as_str() {
-            "exit" => break,
+            "exit 0" => exit(0),
             _ => println!("{}: command not found", input.trim()),
         }
     }
@@ -20,4 +21,8 @@ pub fn user_input() -> String {
     stdin.read_line(&mut input).unwrap();
 
     input
+}
+
+pub fn exit(code: i32) -> ! {
+    std::process::exit(code)
 }
