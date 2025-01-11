@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use std::io::{self, Write};
 
 fn main() {
+    let path_var = std::env::var("PATH").unwrap();
     let COMMANDS = HashSet::from(["exit", "echo", "type"]);
 
     loop {
@@ -14,7 +15,14 @@ fn main() {
                 if COMMANDS.contains(&args.as_str()) {
                     println!("{} is a shell builtin", args)
                 } else {
-                    println!("{}: not found", args)
+                    let split_paths = &mut path_var.split(":");
+                    if let Some(path) = split_paths
+                        .find(|path| std::fs::metadata(format!("{}/{}", path, args)).is_ok())
+                    {
+                        println!("{} is {}", args, path.to_owned() + "/" + &args.to_string())
+                    } else {
+                        println!("{}: not found", args)
+                    }
                 }
             }
             _ => println!("{}: command not found", command.trim()),
