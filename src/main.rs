@@ -1,12 +1,22 @@
 #[allow(unused_imports)]
+use std::collections::HashSet;
 use std::io::{self, Write};
 
 fn main() {
+    let COMMANDS = HashSet::from(["exit", "echo", "type"]);
+
     loop {
         let (command, args) = user_input();
         match command.as_str() {
             "exit" => exit(0),
             "echo" => println!("{}", args),
+            "type" => {
+                if COMMANDS.contains(&args.as_str()) {
+                    println!("{} is a shell builtin", args)
+                } else {
+                    println!("{}: not found", args)
+                }
+            }
             _ => println!("{}: command not found", command.trim()),
         }
     }
@@ -26,6 +36,7 @@ pub fn user_input() -> (String, String) {
         .next() //gets the first value
         .unwrap() //checks if there is a value in the input
         .to_string(); //converts the first value to a string
+
     let args = input
         .split_whitespace() //splits the input to a vector
         .skip(1) //skips the first word of the vector
