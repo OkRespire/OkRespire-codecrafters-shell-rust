@@ -4,14 +4,14 @@ use std::io::{self, Write};
 
 fn main() {
     let path_var = std::env::var("PATH").unwrap();
-    let COMMANDS = HashSet::from(["exit", "echo", "type", "pwd"]);
+    let builtins = HashSet::from(["exit", "echo", "type", "pwd", "cd"]);
     loop {
         let (command, args) = user_input();
         match command.as_str() {
             "exit" => exit(0),
             "echo" => println!("{}", args),
             "type" => {
-                if COMMANDS.contains(&args.as_str()) {
+                if builtins.contains(&args.as_str()) {
                     println!("{} is a shell builtin", args)
                 } else {
                     //used nicklasmoeller solution
@@ -31,6 +31,9 @@ fn main() {
             "pwd" => {
                 let curr_dir = std::env::current_dir().unwrap().display().to_string();
                 println!("{}", curr_dir);
+            }
+            "cd" => {
+                change_directory(&args);
             }
             _ => {
                 let split_paths = &mut path_var.split(":");
@@ -77,6 +80,14 @@ pub fn execute_command(command: &str, _args: &str) {
         .expect("failed to execute process");
 
     cmd.wait().expect("failed to wait on child");
+}
+
+pub fn change_directory(directory: &str) {
+    let new_dir = std::env::set_current_dir(directory);
+
+    if new_dir.is_err() {
+        println!("cd: {}: No such file or directory", directory);
+    }
 }
 
 pub fn exit(code: i32) -> ! {
