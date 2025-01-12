@@ -4,7 +4,7 @@ use std::io::{self, Write};
 
 fn main() {
     let path_var = std::env::var("PATH").unwrap();
-    let COMMANDS = HashSet::from(["exit", "echo", "type"]);
+    let COMMANDS = HashSet::from(["exit", "echo", "type", "pwd"]);
     loop {
         let (command, args) = user_input();
         match command.as_str() {
@@ -27,6 +27,10 @@ fn main() {
                         println!("{}: not found", args);
                     }
                 }
+            }
+            "pwd" => {
+                let curr_dir = std::env::current_dir().unwrap().display().to_string();
+                println!("{}", curr_dir);
             }
             _ => {
                 let split_paths = &mut path_var.split(":");
