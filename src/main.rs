@@ -83,6 +83,16 @@ pub fn execute_command(command: &str, _args: &str) {
 }
 
 pub fn change_directory(directory: &str) {
+    //if the start of the directory is ~, then it redirects to the home directory
+    if directory.starts_with('~') {
+        let home = std::env::var("HOME").unwrap();
+        let new_dir = std::env::set_current_dir(home + &directory[1..]);
+        if new_dir.is_err() {
+            println!("cd: {}: No such file or directory", directory);
+        }
+        return;
+    }
+
     let new_dir = std::env::set_current_dir(directory);
 
     if new_dir.is_err() {
