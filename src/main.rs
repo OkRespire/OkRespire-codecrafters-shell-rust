@@ -9,10 +9,12 @@ fn main() {
         let (command, args) = user_input();
         match command.as_str() {
             "exit" => exit(0),
-            "echo" => println!("{}", args),
+            "echo" => {
+                println!("{}", args.join(" "))
+            }
             "type" => {
-                if builtins.contains(&args.as_str()) {
-                    println!("{} is a shell builtin", args)
+                if builtins.contains(&args[0].as_str()) {
+                    println!("{} is a shell builtin", args[0])
                 } else {
                     //used nicklasmoeller solution
 
@@ -20,11 +22,11 @@ fn main() {
                     //checks if the argument is in the path.
                     //i.e. cat is located in /usr/bin
                     if let Some(path) = split_paths
-                        .find(|path| std::fs::metadata(format!("{}/{}", path, args)).is_ok())
+                        .find(|path| std::fs::metadata(format!("{}/{}", path, args[0])).is_ok())
                     {
-                        println!("{} is {}", args, path.to_owned() + "/" + &args.to_string());
+                        println!("{} is {}", args[0], path.to_owned() + "/" + &args[0]);
                     } else {
-                        println!("{}: not found", args);
+                        println!("{}: not found", args[0]);
                     }
                 }
             }
@@ -33,7 +35,7 @@ fn main() {
                 println!("{}", curr_dir);
             }
             "cd" => {
-                change_directory(&args);
+                change_directory(&args[0]);
             }
             _ => {
                 let split_paths = &mut path_var.split(":");
@@ -49,13 +51,15 @@ fn main() {
     }
 }
 
-pub fn user_input() -> (String, String) {
+pub fn user_input() -> (String, Vec<String>) {
     print!("$ ");
     io::stdout().flush().unwrap();
     // Wait for user input
     let stdin = io::stdin();
     let mut input = String::new();
     stdin.read_line(&mut input).unwrap();
+
+    let input = input.trim();
 
     //looks at the first bit of the input and then the arguments
     let command = input
@@ -64,18 +68,45 @@ pub fn user_input() -> (String, String) {
         .unwrap() //checks if there is a value in the input
         .to_string(); //converts the first value to a string
 
-    let args = input
-        .split_whitespace() //splits the input to a vector
-        .skip(1) //skips the first word of the vector
-        .collect::<Vec<_>>() //collects next two values into a vector
-        .join(" "); //joins the vector into a string
+    //makes arguments a vector instead of a string
+    let mut args = Vec::new();
+    let mut current = String::new(); //looks at the current argument
+    let mut in_quotes = false;
 
-    (command, args)
+    //looks at each character in the input
+    for char in input.chars() {
+        match char {
+            '\'' if in_quotes => {
+                in_quotes = false; //closes the open quotes
+            }
+            '\'' if !in_quotes => {
+                in_quotes = true; //opens the quotes
+            }
+            ' ' if !in_quotes => {
+                //if space outside quote
+                if !current.is_empty() {
+                    args.push(current.clone()); //add current arg to vector
+                    current.clear(); //resets the current string
+                }
+            }
+            _ => current.push(char), //if it's not a space, add it to the current
+        }
+    }
+
+    //adds last argument if there is any
+    if !current.is_empty() {
+        args.push(current.clone());
+    }
+
+    let command = args.first().cloned().unwrap(); //the first word is the command
+    let arguments = args.into_iter().skip(1).collect(); //collects all the arguments
+                                                        //minus the first one as it is a command
+    (command, arguments)
 }
 
-pub fn execute_command(command: &str, _args: &str) {
+pub fn execute_command(command: &str, _args: &[String]) {
     let mut cmd = std::process::Command::new(command)
-        .args(_args.split_whitespace())
+        .args(_args)
         .spawn()
         .expect("failed to execute process");
 
