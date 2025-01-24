@@ -71,18 +71,21 @@ pub fn user_input() -> (String, Vec<String>) {
     //makes arguments a vector instead of a string
     let mut args = Vec::new();
     let mut current = String::new(); //looks at the current argument
-    let mut in_quotes = false;
+    let mut in_single_quotes = false;
+    let mut in_double_quotes = false;
 
     //looks at each character in the input
     for char in input.chars() {
         match char {
-            '\'' if in_quotes => {
-                in_quotes = false; //closes the open quotes
+            '\'' if !in_double_quotes => {
+                in_single_quotes = !in_single_quotes; //single quotes are either opened or closed,
+                                                      //depending on the state
             }
-            '\'' if !in_quotes => {
-                in_quotes = true; //opens the quotes
+            '"' if !in_single_quotes => {
+                in_double_quotes = !in_double_quotes; //double quotes are either opened or closed,
+                                                      //depending on the state
             }
-            ' ' if !in_quotes => {
+            ' ' if !in_single_quotes && !in_double_quotes => {
                 //if space outside quote
                 if !current.is_empty() {
                     args.push(current.clone()); //add current arg to vector
